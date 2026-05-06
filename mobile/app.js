@@ -3,20 +3,20 @@ const learningCards = [
     id: "member",
     name: "收银台引导办卡",
     kind: "办卡",
-    goal: "30 秒讲清免费办卡、本单优惠和隐私回应。",
+    goal: "30 秒讲清免费办卡、活动权益和隐私回应。",
     cards: [
       {
         title: "一句话开口",
         subtitle: "收银台 10 秒触发",
-        lead: "您好，请问有大参林会员吗？没有的话现在可以免费办理，新会员这单符合条件可以直接减 X 元，还能享会员价和积分。",
-        points: ["扫码、报金额或确认无会员后开口", "先讲本单立减，再讲会员价和积分", "语气是提醒权益，不是强迫办理"],
+        lead: "您好，请问有大参林会员吗？没有的话现在可以免费办理。权益按门店活动来，有会员价、优惠券、积分和会员日福利，我先帮您看这单适用哪一种。",
+        points: ["扫码、报金额或确认无会员后开口", "先讲免费和可享权益，再按系统/门店活动说明券使用时间", "语气是提醒权益，不是强迫办理"],
         avoid: ["不办会员就不能买", "办吧办吧，大家都办"]
       },
       {
         title: "新会员权益",
         subtitle: "把“优惠多”说具体",
-        lead: "新会员常见权益是 3 张 5 元券，合计 15 元；部分活动以当期门店规则为准。",
-        points: ["本单：新人券、会员价、积分", "长期：会员日、双倍积分、生日券、星级礼", "大参林全国门店通用"],
+        lead: "新会员常见权益包括会员价、新人券、积分和会员日。券可能当次、次日或下次到店使用，具体以当前门店活动和系统到账为准。",
+        points: ["当下：会员价、活动券或积分按系统匹配", "长期：会员日、双倍积分、生日券、星级礼", "大参林全国门店通用"],
         avoid: ["所有商品都打折", "优惠力度一直一样"]
       },
       {
@@ -55,10 +55,10 @@ const learningCards = [
       image: "./assets/customer-member.png",
       requirement: "完成 1 次 60 分以上的收银台办卡对练",
       scene: "顾客在收银台结账，购买家庭常备药和口罩，总金额 128 元。顾客赶时间，不想被办卡流程耽误。",
-      role: "李先生，45 岁，首次到店。对留手机号敏感，担心后续电话短信打扰；如果员工能讲清本单优惠、免费办理和隐私用途，会考虑开通。",
+      role: "李先生，45 岁，首次到店。对留手机号敏感，担心后续电话短信打扰；如果员工能讲清免费办理、活动权益和手机号用途，会考虑开通。",
       goals: [
         "自然开口：先确认是否有会员，再提示本单可享权益",
-        "讲清价值：本单立减/会员价/积分优先，长期权益补充说明",
+        "讲清价值：会员价/优惠券/积分按当前活动说明，长期权益补充说明",
         "回应顾虑：说明手机号用途，不做绝对化承诺",
         "礼貌收尾：顾客拒绝后最多轻量挽回一次，立即回到收银"
       ]
@@ -141,23 +141,23 @@ const businessPracticeBank = {
         age: 45,
         profile: "首次到店，购买家庭常备药和口罩，总金额128元。赶时间、隐私敏感，担心电话短信打扰。",
         initialUtterance: "快点结账吧，我赶时间。又是办会员？我不想留手机号。",
-        inspiration: "先说明不是强制办，再讲本单可感知权益：免费办理、本单符合条件可立减/享会员价、手机号用于会员账户和权益通知；如果仍拒绝，立即正常收银。",
-        sampleReply: "理解您赶时间，不是必须办，您不办也可以正常购买。会员是免费办理的，手机号主要用于会员账户、积分和优惠券通知。您这单符合条件可以享会员优惠；如果您不方便，我马上先给您正常结账。",
+        inspiration: "先安抚赶时间和隐私顾虑，再例行讲清：会员免费办，权益按门店活动可能是会员价、当次/次日/下次可用券、积分和会员日；手机号用于账户、积分和券到账。顾客仍拒绝就马上收银。",
+        sampleReply: "理解，您赶时间我尽快给您结。会员不是强制的，不办也能正常买。我例行跟您说一下：现在办是免费的，权益按门店活动可能有会员价、优惠券或积分，有些券是次日或下次到店用，长期还有会员日和积分权益。手机号主要用于会员账户、积分和券到账；您要是不方便，我就先给您正常结账。",
         nextUtterance: "那办了以后是不是天天给我打电话、发短信？",
-        acceptedIf: ["免费", "本单权益", "手机号用途", "不强迫"]
+        acceptedIf: ["免费", "权益说明", "手机号用途", "不强迫"]
       }
     },
     requiredChecks: [
       { key: "开口自然", terms: ["不是必须", "不强制", "可以正常购买", "会员"], points: 15 },
-      { key: "当单权益", terms: ["本单", "立减", "会员价", "新人券", "优惠"], points: 25 },
+      { key: "权益说明", terms: ["本单", "当次", "次日", "下次", "会员价", "新人券", "优惠券", "券", "优惠"], points: 25 },
       { key: "长期权益", terms: ["积分", "会员日", "全国", "星级礼", "生日"], points: 15 },
       { key: "流程说明", terms: ["免费", "手机号", "验证码", "30秒", "不需要实体卡"], points: 15 },
       { key: "隐私回应", terms: ["手机号", "账户", "积分", "优惠券", "通知", "保护", "关闭"], points: 20 },
       { key: "尊重顾客", terms: ["正常结账", "不方便", "后续", "理解", "不办也可以"], points: 10 }
     ],
     riskPhrases: ["不办会员就不能买", "手机号随便填", "绝对不会联系", "不涉及个人信息", "公用会员卡", "大家都办"],
-    polishGood: "理解您赶时间，不是必须办理。会员免费开通后，这单符合条件可以享会员价或新人券；手机号主要用于会员账户、积分和优惠券通知。您如果不方便，我马上先给您正常结账。",
-    polishWeak: "建议先共情顾客赶时间，再用一句话说清免费办理、本单权益和手机号用途，最后给顾客选择权。"
+    polishGood: "理解，您赶时间我尽快给您结。会员不是强制的，不办也能正常买。我例行跟您说一下：现在办是免费的，权益按门店活动可能有会员价、当次/次日/下次可用券，也能累计积分、参加会员日。手机号主要用于账户、积分和券到账；您不方便的话，我就先给您正常结账。",
+    polishWeak: "可以更像收银台口语：先说“我尽快给您结”，再补一句“会员免费、不是强制”，权益别说死成一定当单减免，要按门店活动说会员价、券可能次日或下次可用、积分和会员日，最后给顾客选择权。"
   },
   "new-product": {
     mode: "固定对话模式",
@@ -655,10 +655,12 @@ function renderPractice() {
     </div>
     <img class="digital-human-img" src="${scenario.prep.image}" alt="${scenario.name}虚拟顾客" />
     <div class="role-floating-card">
-      <span>AI 顾客</span>
-      <strong>${role.name}，${role.age} 岁</strong>
-      <p>${role.profile}</p>
-      <em>训练目标：${targetBrief}</em>
+      <div>
+        <span>AI 顾客</span>
+        <strong>${role.name}，${role.age} 岁</strong>
+        <p>${role.profile}</p>
+      </div>
+      <em>${targetBrief}</em>
     </div>
   `;
   chatPanel.innerHTML = `
@@ -994,31 +996,34 @@ function practiceInspiration(scenario) {
 }
 
 function buildLiveReview(result) {
+  const missing = currentPracticeConfig().requiredChecks
+    .filter((check) => !result.hits.includes(check.key))
+    .map((check) => check.key);
   if (result.riskHits.length) {
     return {
       tone: "warn",
-      title: "出现风险话术",
-      text: `需修正：${result.riskHits.join("、")}。这类表达会影响合规和顾客体验。`
+      title: "这句有风险，先收住",
+      text: `避开“${result.riskHits.join("、")}”。换成“不是强制、不办也能正常买”，再讲清真实权益和信息用途。`
     };
   }
   if (result.score >= 80) {
     return {
       tone: "good",
-      title: "达到通过标准",
-      text: `得分 ${result.score}，已覆盖：${result.hits.join("、")}。`
+      title: "这轮可以，继续推进",
+      text: `覆盖了${result.hits.join("、")}。下一句保持轻，不要反复逼办。`
     };
   }
   if (result.score >= 60) {
     return {
       tone: "ok",
-      title: "方向对了，再补齐",
-      text: `得分 ${result.score}，已覆盖：${result.hits.join("、") || "部分要点"}。`
+      title: "方向对了，少了关键一句",
+      text: `已讲到${result.hits.join("、") || "部分要点"}；再补${missing.slice(0, 2).join("、") || "顾客顾虑"}会更完整。`
     };
   }
   return {
     tone: "warn",
-    title: "关键动作不足",
-    text: `得分 ${result.score}，需补充场景要求里的关键动作。`
+    title: "像真实收银台重新说一遍",
+    text: `先回应顾客当下顾虑，再讲免费办理、活动权益、手机号用途，最后给“先结账”的选择。`
   };
 }
 
@@ -1034,7 +1039,7 @@ function escapeHtml(value) {
 
 function polishReply(text, result) {
   const config = currentPracticeConfig();
-  if (result.polishedReply) return result.polishedReply;
+  if (result.polishedReply && !result.polishedReply.startsWith("建议表达为：")) return result.polishedReply;
   if (result.riskHits.length) {
     return `建议避开“${result.riskHits[0]}”这类绝对化或不合规表达。${config.polishWeak}`;
   }
@@ -1048,7 +1053,7 @@ function nextCustomerUtterance(result) {
   if (session.turnIndex === 1) return role.nextUtterance || "";
   if (state.scenarioId === "member") {
     if (result.riskHits.length) return "你这么说我更担心了，手机号到底会怎么用？不办是不是也能正常买？";
-    if (result.score < 80) return "你还没说清楚，现在办到底能省多少？如果我不常来还有没有用？";
+    if (result.score < 80) return "你还没说清楚，现在办有什么用？券是今天用还是下次用？如果我不常来还有没有用？";
     return "那如果我今天先不办，下次来还能免费办吗？";
   }
   if (result.riskHits.length) return "你刚才说得有点绝对，我想确认一下，这个是不是药？能保证有效吗？";

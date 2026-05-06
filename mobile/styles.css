@@ -1062,41 +1062,52 @@ li {
 }
 
 #practiceView {
+  display: none;
   min-height: calc(100vh - 20px);
-  padding-bottom: 12px;
+  padding-bottom: 8px;
+}
+
+#practiceView.is-active {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 8px;
+  height: calc(100vh - max(10px, env(safe-area-inset-top)) - 8px);
+  overflow: hidden;
 }
 
 .chat-card {
-  max-height: 248px;
-  min-height: 154px;
+  min-height: 0;
   display: grid;
   gap: 10px;
   align-content: start;
   overflow-y: auto;
-  margin-top: 10px;
+  margin: 0 -2px;
   background: transparent;
   border: 0;
   box-shadow: none;
-  padding: 0;
+  padding: 6px 2px 10px;
   scroll-behavior: smooth;
+  overscroll-behavior: contain;
 }
 
 .live-review-toast {
-  position: sticky;
-  top: max(8px, env(safe-area-inset-top));
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  width: min(360px, calc(100% - 32px));
   z-index: 4;
   display: grid;
   grid-template-columns: auto auto 1fr;
   align-items: center;
   gap: 7px;
   min-height: 38px;
-  margin: -2px 22px 8px;
+  margin: 0;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.96);
   padding: 7px 11px;
   box-shadow: 0 12px 28px rgba(24, 88, 61, 0.15);
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translate(-50%, -10px);
 }
 
 .live-review-toast.is-visible {
@@ -1140,24 +1151,24 @@ li {
 
 .practice-stage {
   position: relative;
-  height: 318px;
-  margin: -2px 0 10px;
-  border-radius: 28px;
+  height: 112px;
+  margin: 0;
+  border-radius: 22px;
   background:
-    radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.55), transparent 28%),
-    linear-gradient(180deg, #e9fff5 0%, #d9f4e9 58%, rgba(255, 255, 255, 0.95) 100%);
-  box-shadow: 0 18px 44px rgba(22, 93, 64, 0.14);
+    radial-gradient(circle at 86% 8%, rgba(255, 255, 255, 0.78), transparent 28%),
+    linear-gradient(135deg, #e9fff5 0%, #ddf5ea 58%, rgba(255, 255, 255, 0.96) 100%);
+  box-shadow: 0 12px 30px rgba(22, 93, 64, 0.11);
   overflow: hidden;
 }
 
 .stage-topbar {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
+  top: 7px;
+  left: 8px;
+  right: 8px;
   z-index: 3;
   display: grid;
-  grid-template-columns: 42px 1fr 48px;
+  grid-template-columns: 36px 1fr 44px;
   align-items: center;
   color: #476357;
 }
@@ -1171,9 +1182,9 @@ li {
 }
 
 .stage-back {
-  width: 34px;
-  height: 34px;
-  font-size: 27px;
+  width: 30px;
+  height: 30px;
+  font-size: 24px;
   line-height: 1;
 }
 
@@ -1181,81 +1192,91 @@ li {
   justify-self: center;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
-  padding: 5px 12px;
+  padding: 4px 10px;
   color: var(--green-deep);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 950;
 }
 
 .stage-end {
   justify-self: end;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .digital-human-img {
   position: absolute;
-  left: 50%;
-  bottom: 62px;
-  width: 226px;
-  height: 226px;
-  transform: translateX(-50%);
+  left: 16px;
+  bottom: 12px;
+  width: 66px;
+  height: 66px;
+  transform: none;
   object-fit: cover;
   object-position: center top;
   border-radius: 50%;
-  filter: drop-shadow(0 18px 24px rgba(20, 100, 67, 0.18));
+  filter: drop-shadow(0 8px 14px rgba(20, 100, 67, 0.18));
 }
 
 .role-floating-card {
   position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: 16px;
+  left: 92px;
+  right: 12px;
+  bottom: 10px;
   z-index: 2;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 12px 14px;
-  box-shadow: 0 14px 30px rgba(28, 92, 65, 0.14);
-  backdrop-filter: blur(12px);
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .role-floating-card span {
   display: inline-flex;
   width: fit-content;
   border-radius: 999px;
-  background: var(--green-pale);
+  background: rgba(22, 166, 111, 0.12);
   color: var(--green-deep);
-  padding: 3px 8px;
-  font-size: 11px;
+  padding: 2px 7px;
+  font-size: 10px;
   font-weight: 950;
 }
 
 .role-floating-card strong {
   display: block;
-  margin-top: 6px;
+  margin-top: 3px;
   color: #14231c;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.25;
 }
 
 .role-floating-card p {
   display: -webkit-box;
-  margin: 5px 0 0;
-  -webkit-line-clamp: 2;
+  margin: 3px 0 0;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
   color: #53645b;
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .role-floating-card em {
   display: block;
-  margin-top: 7px;
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 3px 8px;
   color: var(--green-deep);
-  font-size: 11px;
+  font-size: 10px;
   font-style: normal;
   font-weight: 900;
-  line-height: 1.45;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat-row {
@@ -1287,12 +1308,12 @@ li {
 }
 
 .inline-feedback {
-  width: 86%;
+  width: 92%;
   justify-self: end;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 11px 12px;
-  box-shadow: inset 0 0 0 1px rgba(223, 236, 229, 0.92);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.76);
+  padding: 9px 10px;
+  box-shadow: inset 0 0 0 1px rgba(223, 236, 229, 0.78);
 }
 
 .inline-feedback > div:first-child {
@@ -1327,14 +1348,14 @@ li {
   margin: 0;
   color: #53645b;
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .polish-box {
-  margin-top: 9px;
+  margin-top: 8px;
   border-radius: 12px;
-  background: #f7fbf9;
-  padding: 9px;
+  background: #f4faf7;
+  padding: 8px;
 }
 
 .polish-box p {
@@ -1342,11 +1363,11 @@ li {
 }
 
 .inspiration-card {
-  margin: 8px 0 9px;
-  border-radius: 16px;
+  margin: 0;
+  border-radius: 15px;
   background:
     linear-gradient(135deg, rgba(221, 246, 233, 0.96), rgba(255, 255, 255, 0.96));
-  padding: 11px 12px;
+  padding: 9px 11px;
   box-shadow: inset 0 0 0 1px rgba(205, 232, 218, 0.86);
 }
 
@@ -1355,7 +1376,7 @@ li {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .inspiration-title strong {
@@ -1380,10 +1401,10 @@ li {
   grid-template-columns: 1fr auto;
   gap: 8px;
   align-items: end;
-  margin-top: 8px;
-  border-radius: 26px;
+  margin-top: 0;
+  border-radius: 24px;
   background: rgba(255, 255, 255, 0.88);
-  padding: 8px;
+  padding: 7px;
   box-shadow:
     0 14px 34px rgba(24, 91, 63, 0.11),
     inset 0 0 0 1px rgba(226, 238, 231, 0.92);
@@ -1392,12 +1413,12 @@ li {
 }
 
 .manual-reply {
-  min-height: 44px;
-  max-height: 94px;
+  min-height: 42px;
+  max-height: 86px;
   border: 0;
-  border-radius: 18px;
+  border-radius: 17px;
   background: #f8fbf9;
-  padding: 12px 13px;
+  padding: 11px 12px;
   box-shadow: inset 0 0 0 1px rgba(219, 231, 224, 0.92);
 }
 
@@ -1536,11 +1557,11 @@ li {
 @keyframes liveToastIn {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.98);
+    transform: translate(-50%, -10px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate(-50%, 0) scale(1);
   }
 }
 
@@ -1586,12 +1607,12 @@ textarea:focus {
 }
 
 .reply-box .manual-reply {
-  min-height: 44px;
-  max-height: 94px;
+  min-height: 42px;
+  max-height: 86px;
   border: 0;
   border-radius: 18px;
   background: #f8fbf9;
-  padding: 12px 13px;
+  padding: 11px 12px;
   box-shadow: inset 0 0 0 1px rgba(219, 231, 224, 0.92);
 }
 

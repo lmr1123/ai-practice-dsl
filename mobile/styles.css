@@ -1539,6 +1539,7 @@ li {
   color: #c85c25;
   font-size: 11px;
   font-weight: 900;
+  transition: background 180ms ease, color 180ms ease;
 }
 
 .voice-live[hidden] {
@@ -1564,6 +1565,35 @@ li {
   border-radius: 999px;
   background: #e46b34;
   animation: voiceBar 820ms ease-in-out infinite;
+}
+
+.voice-live.is-speaking {
+  background: #eafbf3;
+  color: var(--green-deep);
+}
+
+.voice-live.is-speaking .voice-wave i {
+  background: var(--green);
+}
+
+.voice-live.is-silent {
+  background: #fff8df;
+  color: #9a6f00;
+}
+
+.voice-live.is-silent .voice-wave i {
+  animation-play-state: paused;
+  background: #d5a524;
+}
+
+.voice-live.is-waiting {
+  background: #f2f6f4;
+  color: #6a7c72;
+}
+
+.voice-live.is-waiting .voice-wave i {
+  animation-duration: 1.4s;
+  background: #8fa197;
 }
 
 .voice-wave i:nth-child(2) {

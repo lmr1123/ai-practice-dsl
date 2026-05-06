@@ -258,7 +258,14 @@ let backendTranscript = "";
 let backendCommittedTranscript = "";
 let backendSessionTranscript = "";
 let backendFinalized = false;
+let backendReconnectAllowed = true;
 let stoppingVoiceRecording = false;
+let vadMode = "idle";
+let vadSawSpeech = false;
+let vadSilenceStartedAt = 0;
+let vadLastStatusAt = 0;
+let vadLastLongSilenceAt = 0;
+let audioOutputMute = null;
 
 function apiBaseUrl() {
   if (window.AI_PRACTICE_API_BASE_URL) return window.AI_PRACTICE_API_BASE_URL.replace(/\/$/, "");
@@ -693,6 +700,83 @@ function setSpeechStatus(text) {
   if (speechStatus) speechStatus.textContent = text;
 }
 
+function setVadMode(mode, statusText) {
+  if (vadMode === mode && !statusText) return;
+  vadMode = mode;
+  if (voiceLive) {
+    voiceLive.classList.toggle("is-speaking", mode === "speaking");
+    voiceLive.classList.toggle("is-silent", mode === "silent");
+    voiceLive.classList.toggle("is-waiting", mode === "waiting");
+    const label = voiceLive.querySelector("em");
+    if (label) {
+      label.textContent = ({
+        speaking: "正在听你说话",
+        silent: "检测到停顿，可继续补充",
+        waiting: "等待清晰声音",
+        idle: "正在录音并实时转写"
+      })[mode] || "正在录音并实时转写";
+    }
+  }
+  if (statusText) setSpeechStatus(statusText);
+}
+
+function resetVadState() {
+  vadMode = "idle";
+  vadSawSpeech = false;
+  vadSilenceStartedAt = 0;
+  vadLastStatusAt = 0;
+  vadLastLongSilenceAt = 0;
+  if (voiceLive) voiceLive.classList.remove("is-speaking", "is-silent", "is-waiting");
+}
+
+function rmsLevel(samples) {
+  let sum = 0;
+  for (let index = 0; index < samples.length; index += 1) {
+    sum += samples[index] * samples[index];
+  }
+  return Math.sqrt(sum / Math.max(1, samples.length));
+}
+
+function updateVad(samples) {
+  if (!replyForm.classList.contains("is-recording") || stoppingVoiceRecording) return;
+  const now = Date.now();
+  const rms = rmsLevel(samples);
+  const isSpeech = rms > 0.018;
+  const isNoisy = rms > 0.22;
+  if (isSpeech) {
+    vadSawSpeech = true;
+    vadSilenceStartedAt = 0;
+    if (isNoisy && now - vadLastStatusAt > 4200) {
+      vadLastStatusAt = now;
+      setVadMode("speaking", "声音偏大或环境较吵，保持正常音量说话即可");
+      return;
+    }
+    if (vadMode !== "speaking") {
+      setVadMode("speaking", "检测到说话，正在实时转写");
+    }
+    return;
+  }
+
+  if (!vadSawSpeech) {
+    if (recordingStartedAt && now - recordingStartedAt > 2800 && now - vadLastStatusAt > 4500) {
+      vadLastStatusAt = now;
+      setVadMode("waiting", "还没检测到清晰声音，可以靠近手机正常说");
+    }
+    return;
+  }
+
+  if (!vadSilenceStartedAt) vadSilenceStartedAt = now;
+  const silenceMs = now - vadSilenceStartedAt;
+  if (silenceMs > 1200 && vadMode !== "silent") {
+    setVadMode("silent", "检测到停顿，不会自动结束；可以继续补充或提交点评");
+    return;
+  }
+  if (silenceMs > 8500 && now - vadLastLongSilenceAt > 8500) {
+    vadLastLongSilenceAt = now;
+    setVadMode("waiting", "已经安静一会儿，可继续说，或提交当前文字点评");
+  }
+}
+
 function setVoiceButtonState(stateName = "idle") {
   if (!voiceCapture) return;
   const labels = {
@@ -713,6 +797,7 @@ function speechSupported() {
 function resetSpeechComposer() {
   stopVoiceRecording({ keepText: true, silent: true });
   replyForm.classList.remove("is-recording", "is-listening", "is-manual");
+  resetVadState();
   voiceCapture.disabled = false;
   voiceCapture.classList.remove("is-recording", "is-listening");
   setVoiceButtonState(speechSupported() ? "idle" : "manual");
@@ -838,6 +923,7 @@ function floatTo16BitPcm(input) {
 
 function connectBackendAsr() {
   backendAsrReady = false;
+  backendReconnectAllowed = true;
   backendSessionTranscript = "";
   backendAsrSocket = new WebSocket(`${wsBaseUrl()}/api/asr/stream`);
   backendAsrSocket.binaryType = "arraybuffer";
@@ -873,7 +959,7 @@ function connectBackendAsr() {
   });
   backendAsrSocket.addEventListener("close", () => {
     backendAsrReady = false;
-    if (stoppingVoiceRecording || !replyForm.classList.contains("is-recording")) return;
+    if (!backendReconnectAllowed || stoppingVoiceRecording || !replyForm.classList.contains("is-recording")) return;
     if (backendTranscript) {
       backendCommittedTranscript = backendTranscript;
       backendSessionTranscript = "";
@@ -904,6 +990,7 @@ function switchToBrowserSpeechOrManual(reason) {
 
 function closeBackendAsr() {
   backendFinalized = false;
+  backendReconnectAllowed = false;
   if (backendAsrSocket && backendAsrSocket.readyState === WebSocket.OPEN) {
     try {
       backendAsrSocket.send(JSON.stringify({ type: "end" }));
@@ -925,6 +1012,7 @@ async function startVoiceRecording() {
   backendSessionTranscript = "";
   backendFinalized = false;
   stoppingVoiceRecording = false;
+  resetVadState();
   replyInput.value = "";
   if (voiceLive) voiceLive.hidden = false;
   if (voiceTimer) voiceTimer.textContent = "00:00";
@@ -954,12 +1042,17 @@ async function startVoiceRecording() {
     audioSource = audioContext.createMediaStreamSource(recordingStream);
     audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
     audioProcessor.onaudioprocess = (event) => {
+      const samples = event.inputBuffer.getChannelData(0);
+      updateVad(samples);
       if (!backendAsrSocket || backendAsrSocket.readyState !== WebSocket.OPEN || !backendAsrReady) return;
-      const pcm = downsampleTo16k(event.inputBuffer.getChannelData(0), audioContext.sampleRate);
+      const pcm = downsampleTo16k(samples, audioContext.sampleRate);
       backendAsrSocket.send(pcm);
     };
+    audioOutputMute = audioContext.createGain();
+    audioOutputMute.gain.value = 0;
     audioSource.connect(audioProcessor);
-    audioProcessor.connect(audioContext.destination);
+    audioProcessor.connect(audioOutputMute);
+    audioOutputMute.connect(audioContext.destination);
   } catch {
     stopVoiceRecording({ keepText: true, silent: true });
     switchToBrowserSpeechOrManual("讯飞转写启动失败");
@@ -993,6 +1086,13 @@ function stopVoiceRecording({ keepText = true, silent = false } = {}) {
       // Audio node may already be disconnected.
     }
   }
+  if (audioOutputMute) {
+    try {
+      audioOutputMute.disconnect();
+    } catch {
+      // Audio node may already be disconnected.
+    }
+  }
   if (audioContext) {
     try {
       audioContext.close();
@@ -1014,10 +1114,12 @@ function stopVoiceRecording({ keepText = true, silent = false } = {}) {
   mediaRecorder = null;
   audioProcessor = null;
   audioSource = null;
+  audioOutputMute = null;
   audioContext = null;
   recordingStream = null;
   recordingStartedAt = 0;
   isListening = false;
+  resetVadState();
   replyForm.classList.remove("is-recording", "is-listening");
   voiceCapture.classList.remove("is-recording", "is-listening");
   setVoiceButtonState(replyInput.value.trim() ? "retry" : "idle");

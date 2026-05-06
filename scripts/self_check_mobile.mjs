@@ -6,7 +6,7 @@ const css = readFileSync(new URL("../mobile/styles.css", import.meta.url), "utf8
 
 const checks = [
   ["页面入口存在", html.includes('id="practiceView"') && html.includes('id="startPractice"')],
-  ["资源版本已更新", html.includes("app.js?v=20260506-chat") && html.includes("styles.css?v=20260506-chat")],
+  ["资源版本已更新", html.includes("app.js?v=20260506-asr") && html.includes("styles.css?v=20260506-asr")],
   ["微信式会话输入", html.includes('id="replyInput"') && html.includes('id="voiceCapture"') && html.includes('id="voiceLive"') && html.includes("提交点评")],
   ["点击录音闭环", app.includes("toggleVoiceRecording") && app.includes("startVoiceRecording") && app.includes("stopVoiceRecording")],
   ["语音实时转写", app.includes("SpeechRecognition") && app.includes("interimResults = true") && app.includes("正在录音并实时转写")],

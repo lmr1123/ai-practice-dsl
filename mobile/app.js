@@ -248,12 +248,17 @@ let recordingStartedAt = 0;
 let recordingTimer = null;
 let finalTranscript = "";
 let interimTranscript = "";
+let browserCommittedTranscript = "";
 let backendAsrSocket = null;
 let audioContext = null;
 let audioSource = null;
 let audioProcessor = null;
 let backendAsrReady = false;
 let backendTranscript = "";
+let backendCommittedTranscript = "";
+let backendSessionTranscript = "";
+let backendFinalized = false;
+let stoppingVoiceRecording = false;
 
 function apiBaseUrl() {
   if (window.AI_PRACTICE_API_BASE_URL) return window.AI_PRACTICE_API_BASE_URL.replace(/\/$/, "");
@@ -738,12 +743,16 @@ function ensureSpeechRecognition() {
         interimTranscript += text;
       }
     });
-    const transcript = `${finalTranscript}${interimTranscript}`.trim();
+    const transcript = `${browserCommittedTranscript}${finalTranscript}${interimTranscript}`.trim();
     replyInput.value = transcript;
     setSpeechStatus(event.results[event.results.length - 1]?.isFinal ? "识别完成，可编辑后点击“发”发送" : "正在实时转写...");
   };
   speechRecognition.onerror = (event) => {
     isListening = false;
+    if (event.error === "no-speech" && replyForm.classList.contains("is-recording") && !stoppingVoiceRecording) {
+      setSpeechStatus("暂时没有检测到声音，继续说话会自动接着识别");
+      return;
+    }
     const reasonMap = {
       "not-allowed": "麦克风权限未开启",
       "service-not-allowed": "浏览器语音服务不可用",
@@ -755,8 +764,21 @@ function ensureSpeechRecognition() {
   };
   speechRecognition.onend = () => {
     isListening = false;
+    const currentText = replyInput.value.trim();
+    if (currentText) browserCommittedTranscript = currentText;
     replyForm.classList.remove("is-listening");
     voiceCapture.classList.remove("is-listening");
+    if (replyForm.classList.contains("is-recording") && !stoppingVoiceRecording) {
+      window.setTimeout(() => {
+        if (!replyForm.classList.contains("is-recording") || stoppingVoiceRecording) return;
+        try {
+          speechRecognition.start();
+        } catch {
+          setSpeechStatus("浏览器语音服务已暂停，可再点“说”重试或手动输入");
+        }
+      }, 180);
+      return;
+    }
     if (!replyForm.classList.contains("is-recording")) {
       voiceCapture.textContent = "说";
     }
@@ -802,8 +824,8 @@ function floatTo16BitPcm(input) {
 }
 
 function connectBackendAsr() {
-  backendTranscript = "";
   backendAsrReady = false;
+  backendSessionTranscript = "";
   backendAsrSocket = new WebSocket(`${wsBaseUrl()}/api/asr/stream`);
   backendAsrSocket.binaryType = "arraybuffer";
   backendAsrSocket.addEventListener("message", (event) => {
@@ -815,11 +837,18 @@ function connectBackendAsr() {
     }
     if (payload.type === "ready") {
       backendAsrReady = true;
+      backendFinalized = false;
       setSpeechStatus("正在录音并通过讯飞实时转写，请直接说完整话术");
     }
     if (payload.type === "partial" || payload.type === "final") {
-      backendTranscript = payload.text || backendTranscript;
+      backendSessionTranscript = payload.text || backendSessionTranscript;
+      backendTranscript = `${backendCommittedTranscript}${backendSessionTranscript}`;
       replyInput.value = backendTranscript;
+      if (payload.type === "final") {
+        backendFinalized = true;
+        backendCommittedTranscript = backendTranscript;
+        backendSessionTranscript = "";
+      }
       setSpeechStatus(payload.type === "final" ? "讯飞转写完成，可编辑后点击“发”发送" : "讯飞实时转写中...");
     }
     if (payload.type === "error") {
@@ -828,6 +857,20 @@ function connectBackendAsr() {
   });
   backendAsrSocket.addEventListener("error", () => {
     switchToBrowserSpeechOrManual("后端语音服务连接失败");
+  });
+  backendAsrSocket.addEventListener("close", () => {
+    backendAsrReady = false;
+    if (stoppingVoiceRecording || !replyForm.classList.contains("is-recording")) return;
+    if (backendTranscript) {
+      backendCommittedTranscript = backendTranscript;
+      backendSessionTranscript = "";
+    }
+    if (backendFinalized) {
+      setSpeechStatus("已完成一段转写，继续说话会自动接着识别");
+    }
+    window.setTimeout(() => {
+      if (!stoppingVoiceRecording && replyForm.classList.contains("is-recording")) connectBackendAsr();
+    }, 240);
   });
 }
 
@@ -847,6 +890,7 @@ function switchToBrowserSpeechOrManual(reason) {
 }
 
 function closeBackendAsr() {
+  backendFinalized = false;
   if (backendAsrSocket && backendAsrSocket.readyState === WebSocket.OPEN) {
     try {
       backendAsrSocket.send(JSON.stringify({ type: "end" }));
@@ -862,7 +906,12 @@ function closeBackendAsr() {
 async function startVoiceRecording() {
   finalTranscript = "";
   interimTranscript = "";
+  browserCommittedTranscript = "";
   backendTranscript = "";
+  backendCommittedTranscript = "";
+  backendSessionTranscript = "";
+  backendFinalized = false;
+  stoppingVoiceRecording = false;
   replyInput.value = "";
   if (voiceLive) voiceLive.hidden = false;
   if (voiceTimer) voiceTimer.textContent = "00:00";
@@ -905,6 +954,7 @@ async function startVoiceRecording() {
 }
 
 function stopVoiceRecording({ keepText = true, silent = false } = {}) {
+  stoppingVoiceRecording = true;
   if (recordingTimer) {
     window.clearInterval(recordingTimer);
     recordingTimer = null;
@@ -963,6 +1013,9 @@ function stopVoiceRecording({ keepText = true, silent = false } = {}) {
   if (!silent) {
     setSpeechStatus(replyInput.value.trim() ? "录音已停止，转写内容可编辑，点击“发”发送" : "录音已停止，未识别到文字，可重试或手动输入");
   }
+  window.setTimeout(() => {
+    stoppingVoiceRecording = false;
+  }, 0);
 }
 
 function toggleVoiceRecording() {

@@ -34,11 +34,19 @@ function normalizeXunfeiText(data) {
   return words.map((item) => item.cw?.map((cw) => cw.w).join("") || "").join("");
 }
 
+function currentTextFromSegments(segments) {
+  return Array.from(segments.entries())
+    .sort(([left], [right]) => Number(left) - Number(right))
+    .map(([, text]) => text)
+    .join("");
+}
+
 export function createXunfeiAsrBridge(client) {
   let xfyun = null;
   let started = false;
   let closedByClient = false;
   let accumulatedText = "";
+  const segments = new Map();
 
   try {
     xfyun = new WebSocket(buildAuthUrl());
@@ -63,9 +71,22 @@ export function createXunfeiAsrBridge(client) {
       sendClient(client, { type: "error", message: payload.message || "讯飞识别失败", code: payload.code });
       return;
     }
+    const result = payload.data?.result;
     const text = normalizeXunfeiText(payload);
     if (text) {
-      accumulatedText += text;
+      const sn = Number(result?.sn);
+      const pgs = result?.pgs;
+      const rg = result?.rg;
+      if (Number.isFinite(sn)) {
+        if (pgs === "rpl" && Array.isArray(rg) && rg.length === 2) {
+          const [start, end] = rg.map(Number);
+          for (let index = start; index <= end; index += 1) segments.delete(index);
+        }
+        segments.set(sn, text);
+        accumulatedText = currentTextFromSegments(segments);
+      } else {
+        accumulatedText += text;
+      }
       sendClient(client, { type: "partial", text: accumulatedText, delta: text });
     }
     if (payload.data?.status === 2) {
@@ -123,7 +144,7 @@ export function createXunfeiAsrBridge(client) {
             domain: "iat",
             accent: "mandarin",
             dwa: "wpgs",
-            vad_eos: 3000
+            vad_eos: 10000
           },
           data: {
             status: 0,

@@ -8,6 +8,7 @@ import { WebSocketServer } from "ws";
 import { createXunfeiAsrBridge } from "./services/xunfeiAsr.js";
 import { createPracticeSession, handlePracticeMessage, finishPracticeSession } from "./services/glmCoach.js";
 import { recordPracticeReport } from "./services/feishuRecorder.js";
+import { doubaoRealtimeStatus, checkDoubaoRealtimeConnection } from "./services/doubaoRealtime.js";
 
 const rootDir = fileURLToPath(new URL("../", import.meta.url));
 loadEnv({ path: join(rootDir, ".env.local") });
@@ -76,8 +77,18 @@ async function routeApi(req, res) {
       ok: true,
       asr: Boolean(process.env.XFYUN_APP_ID && process.env.XFYUN_API_KEY && process.env.XFYUN_API_SECRET),
       glm: Boolean(process.env.GLM_API_KEY),
+      doubaoRealtime: doubaoRealtimeStatus().configured,
       feishuMode: process.env.FEISHU_RECORD_MODE || "local"
     });
+    return true;
+  }
+  if (req.method === "GET" && url.pathname === "/api/doubao/realtime/status") {
+    sendJson(res, 200, doubaoRealtimeStatus());
+    return true;
+  }
+  if (req.method === "POST" && url.pathname === "/api/doubao/realtime/check") {
+    const result = await checkDoubaoRealtimeConnection();
+    sendJson(res, result.ok ? 200 : 502, result);
     return true;
   }
   if (req.method === "POST" && url.pathname === "/api/practice/session") {

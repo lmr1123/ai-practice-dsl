@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>大参林 AI 陪练</title>
-    <link rel="stylesheet" href="./styles.css?v=20260507-vad" />
+    <link rel="stylesheet" href="./styles.css?v=20260507-doubao" />
   </head>
   <body>
     <main class="phone-shell">
@@ -157,7 +157,21 @@
           </div>
         </div>
         <section class="prep-card" id="prepCard"></section>
-        <button class="primary-cta prep-start" type="button" id="startPractice">开始对练</button>
+        <div class="prep-actions">
+          <button class="ghost-button realtime-start" type="button" id="startRealtimeVoice">实时语音</button>
+          <button class="primary-cta prep-start" type="button" id="startPractice">开始对练</button>
+        </div>
+      </section>
+
+      <section class="view sub-view" id="realtimeView">
+        <div class="page-head">
+          <button class="back-button" type="button" data-action="prep" aria-label="返回">‹</button>
+          <div>
+            <p class="section-label">豆包实时语音</p>
+            <h2 id="realtimeTitle">实时语音对练</h2>
+          </div>
+        </div>
+        <section class="realtime-panel" id="realtimePanel"></section>
       </section>
 
       <section class="view sub-view" id="practiceView">
@@ -207,6 +221,6 @@
       <button type="button" data-nav="profileView"><span>♙</span>我的</button>
     </nav>
 
-    <script src="./app.js?v=20260507-vad"></script>
+    <script src="./app.js?v=20260507-doubao"></script>
   </body>
 </html>

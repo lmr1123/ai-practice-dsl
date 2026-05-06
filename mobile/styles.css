@@ -588,9 +588,24 @@ h3 {
   padding-bottom: 20px;
 }
 
-.prep-start {
+.prep-actions {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 10px;
   margin-top: 12px;
+}
+
+.prep-start {
   animation: prepPulse 2.4s ease-in-out infinite;
+}
+
+.realtime-start {
+  min-height: 52px;
+  border-color: rgba(22, 166, 111, 0.22);
+  background: rgba(22, 166, 111, 0.1);
+  color: var(--green-deep);
+  font-size: 15px;
+  font-weight: 950;
 }
 
 .prep-section-head {
@@ -1059,6 +1074,136 @@ li {
   align-content: center;
   gap: 12px;
   text-align: center;
+}
+
+.realtime-panel {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.realtime-hero {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 14px;
+  align-items: center;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(22, 166, 111, 0.16), transparent 30%),
+    linear-gradient(135deg, #effdf6, #ffffff);
+  padding: 14px;
+  box-shadow: 0 14px 34px rgba(24, 91, 63, 0.1);
+}
+
+.realtime-hero img {
+  width: 92px;
+  height: 92px;
+  border-radius: 22px;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.realtime-hero span,
+.realtime-card-head span {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  background: rgba(22, 166, 111, 0.12);
+  color: var(--green-deep);
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.realtime-hero h3 {
+  margin: 8px 0 5px;
+  font-size: 20px;
+}
+
+.realtime-hero p,
+.realtime-card p,
+.realtime-status p {
+  margin: 0;
+  color: #53645b;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.realtime-card,
+.realtime-status {
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 14px;
+  box-shadow:
+    0 12px 26px rgba(24, 91, 63, 0.08),
+    inset 0 0 0 1px rgba(222, 235, 228, 0.86);
+}
+
+.realtime-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.realtime-card-head strong,
+.realtime-status strong {
+  color: #1d3d31;
+  font-size: 14px;
+}
+
+.realtime-card em {
+  display: block;
+  margin-top: 10px;
+  border-radius: 14px;
+  background: #f3faf6;
+  padding: 10px;
+  color: var(--green-deep);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.realtime-card pre {
+  max-height: 230px;
+  overflow: auto;
+  margin: 0;
+  border-radius: 14px;
+  background: #f6faf8;
+  padding: 11px;
+  color: #263f34;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.realtime-status {
+  display: grid;
+  gap: 6px;
+  background: #f6faf8;
+}
+
+.realtime-status.is-ok {
+  background: #e9f8ef;
+}
+
+.realtime-status.is-warn {
+  background: #fff4e9;
+}
+
+.realtime-status em {
+  color: #6f8178;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.realtime-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 #practiceView {

@@ -226,6 +226,8 @@ const quizScenario = document.querySelector("#quizScenario");
 const quizCard = document.querySelector("#quizCard");
 const prepTitle = document.querySelector("#prepTitle");
 const prepCard = document.querySelector("#prepCard");
+const realtimeTitle = document.querySelector("#realtimeTitle");
+const realtimePanel = document.querySelector("#realtimePanel");
 const practiceScenario = document.querySelector("#practiceScenario");
 const practiceRoleCard = document.querySelector("#practiceRoleCard");
 const liveReviewToast = document.querySelector("#liveReviewToast");
@@ -355,6 +357,13 @@ async function finishPracticeOnServer(localReport) {
   } catch {
     return null;
   }
+}
+
+async function getJson(path) {
+  if (!hasBackendApi()) throw new Error("backend api is not configured");
+  const response = await fetch(`${apiBaseUrl()}${path}`);
+  if (!response.ok) throw new Error(await response.text());
+  return response.json();
 }
 
 function completedMap() {
@@ -518,6 +527,81 @@ function renderPrep() {
     </section>
   `;
   requestAnimationFrame(() => prepCard.classList.add("is-animated"));
+}
+
+function buildRealtimeRolePrompt() {
+  const scenario = currentScenario();
+  const config = currentPracticeConfig();
+  const role = currentCustomerRole();
+  return [
+    `你是大参林连锁药店 AI 陪练中的虚拟顾客，场景是《${scenario.name}》。`,
+    `你要扮演：${role.name}，${role.age}岁，${role.profile}`,
+    `开场白：${role.initialUtterance}`,
+    "训练方式：员工通过语音与你对话，你用真实顾客口吻追问，不要替员工说话。",
+    `对话目标：${scenario.prep.goals.join("；")}`,
+    config.requiredChecks ? `评分关注点：${config.requiredChecks.map((item) => item.key).join("、")}` : "",
+    config.riskPhrases ? `风险话术：${config.riskPhrases.join("、")}` : "",
+    "回复要求：每次只说 1-2 句，语气自然，像真实门店顾客；如果员工没讲清关键点，就继续追问；如果出现不合规或强迫表达，要表现出顾虑。"
+  ].filter(Boolean).join("\n");
+}
+
+function renderRealtimeVoice(status = null) {
+  const scenario = currentScenario();
+  const role = currentCustomerRole();
+  const prompt = buildRealtimeRolePrompt();
+  if (realtimeTitle) realtimeTitle.textContent = scenario.name;
+  realtimePanel.innerHTML = `
+    <section class="realtime-hero">
+      <img src="${scenario.prep.image}" alt="${scenario.name}虚拟顾客" />
+      <div>
+        <span>新入口体验</span>
+        <h3>端到端实时语音</h3>
+        <p>保留原有 ASR + GLM 评分链路，这里用于验证豆包实时语音模型的角色扮演能力。</p>
+      </div>
+    </section>
+    <section class="realtime-card">
+      <div class="realtime-card-head">
+        <span>顾客角色</span>
+        <strong>${role.name}，${role.age} 岁</strong>
+      </div>
+      <p>${role.profile}</p>
+      <em>${role.initialUtterance}</em>
+    </section>
+    <section class="realtime-card">
+      <div class="realtime-card-head">
+        <span>模型预设</span>
+        <strong>将注入到豆包实时语音会话</strong>
+      </div>
+      <pre>${escapeHtml(prompt)}</pre>
+    </section>
+    <section class="realtime-status ${status?.ok ? "is-ok" : status ? "is-warn" : ""}">
+      <strong>${status ? (status.ok ? "连接检查通过" : "连接检查未通过") : "接入状态"}</strong>
+      <p>${status ? escapeHtml(status.message || "已返回检查结果") : "点击下方按钮检查服务端是否已能连接豆包实时语音。密钥只保存在服务端，不会下发到浏览器。"}</p>
+      ${status?.latencyMs ? `<em>连接耗时 ${status.latencyMs}ms</em>` : ""}
+    </section>
+    <div class="realtime-actions">
+      <button class="ghost-button" type="button" id="checkRealtimeVoice">检查连接</button>
+      <button class="solid-button" type="button" disabled>语音通话开发中</button>
+    </div>
+  `;
+  realtimePanel.querySelector("#checkRealtimeVoice").addEventListener("click", checkRealtimeVoice);
+}
+
+async function checkRealtimeVoice() {
+  const button = realtimePanel.querySelector("#checkRealtimeVoice");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "检查中...";
+  }
+  try {
+    const result = await postJson("/api/doubao/realtime/check", { scenarioId: state.scenarioId });
+    renderRealtimeVoice(result);
+  } catch (error) {
+    renderRealtimeVoice({
+      ok: false,
+      message: "暂未连通豆包实时语音。请确认服务端环境变量、实时语音权限和资源 ID。"
+    });
+  }
 }
 
 function renderLearn() {
@@ -1417,7 +1501,13 @@ function enterPractice() {
   showView("practice");
 }
 
+function enterRealtimeVoice() {
+  renderRealtimeVoice();
+  showView("realtime");
+}
+
 document.querySelector("#startPractice").addEventListener("click", enterPractice);
+document.querySelector("#startRealtimeVoice").addEventListener("click", enterRealtimeVoice);
 voiceCapture.addEventListener("click", toggleVoiceRecording);
 
 document.querySelectorAll("[data-start-learn]").forEach((button) => {

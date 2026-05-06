@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>大参林 AI 陪练</title>
-    <link rel="stylesheet" href="./styles.css?v=20260506-asr" />
+    <link rel="stylesheet" href="./styles.css?v=20260506-composer" />
   </head>
   <body>
     <main class="phone-shell">
@@ -166,17 +166,26 @@
         <section class="chat-card" id="chatPanel"></section>
         <section class="inspiration-card" id="inspirationCard"></section>
         <form class="reply-box" id="replyForm">
-          <textarea class="manual-reply" id="replyInput" rows="2" placeholder="点击“说”开始录音转写，也可手动输入..."></textarea>
-          <div class="reply-actions">
-            <button class="voice-talk" id="voiceCapture" type="button" aria-label="点击说话">点击说话</button>
-            <button class="submit-reply" type="submit">提交点评</button>
+          <div class="composer-head">
+            <span>我的回应</span>
+            <em id="speechStatus">先录音，确认文字后提交点评</em>
           </div>
+          <textarea class="manual-reply" id="replyInput" rows="2" placeholder="转写文字会出现在这里，也可以直接输入..." aria-label="本轮店员回应"></textarea>
           <div class="voice-live" id="voiceLive" hidden>
             <span class="voice-wave" aria-hidden="true"><i></i><i></i><i></i></span>
             <strong id="voiceTimer">00:00</strong>
             <em>正在录音并实时转写</em>
           </div>
-          <p id="speechStatus">请使用真实话术完成本轮对练</p>
+          <div class="reply-actions">
+            <button class="voice-talk" id="voiceCapture" type="button" aria-label="开始录音">
+              <span>开始录音</span>
+              <em>说完后点停止</em>
+            </button>
+            <button class="submit-reply" type="submit">
+              <span>提交</span>
+              <em>获取点评</em>
+            </button>
+          </div>
         </form>
         <section class="feedback-card" id="feedbackPanel" hidden></section>
       </section>
@@ -198,6 +207,6 @@
       <button type="button" data-nav="profileView"><span>♙</span>我的</button>
     </nav>
 
-    <script src="./app.js?v=20260506-asr"></script>
+    <script src="./app.js?v=20260506-composer"></script>
   </body>
 </html>

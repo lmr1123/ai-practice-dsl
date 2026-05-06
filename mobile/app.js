@@ -693,6 +693,19 @@ function setSpeechStatus(text) {
   if (speechStatus) speechStatus.textContent = text;
 }
 
+function setVoiceButtonState(stateName = "idle") {
+  if (!voiceCapture) return;
+  const labels = {
+    idle: ["开始录音", "说完后点停止"],
+    listening: ["停止转写", "正在听你说"],
+    manual: ["手动输入", "语音不可用"],
+    retry: ["重新录音", "或直接修改文字"]
+  };
+  const [title, subtitle] = labels[stateName] || labels.idle;
+  voiceCapture.innerHTML = `<span>${title}</span><em>${subtitle}</em>`;
+  voiceCapture.setAttribute("aria-label", title);
+}
+
 function speechSupported() {
   return Boolean(BrowserSpeechRecognition);
 }
@@ -702,9 +715,9 @@ function resetSpeechComposer() {
   replyForm.classList.remove("is-recording", "is-listening", "is-manual");
   voiceCapture.disabled = false;
   voiceCapture.classList.remove("is-recording", "is-listening");
-  voiceCapture.textContent = speechSupported() ? "说" : "写";
+  setVoiceButtonState(speechSupported() ? "idle" : "manual");
   if (voiceLive) voiceLive.hidden = true;
-  setSpeechStatus(speechSupported() ? "点击“说”开始录音实时转写，再点一次停止；确认后点“发”发送" : "当前环境未开放语音识别，已切换文本输入，不影响对练");
+  setSpeechStatus(speechSupported() ? "先录音，确认文字后提交点评" : "当前环境未开放语音识别，已切换文本输入");
 }
 
 function switchToManualSpeech(reason = "语音通道暂不可用") {
@@ -713,9 +726,9 @@ function switchToManualSpeech(reason = "语音通道暂不可用") {
   replyForm.classList.remove("is-recording", "is-listening");
   replyForm.classList.add("is-manual");
   voiceCapture.classList.remove("is-recording", "is-listening");
-  voiceCapture.textContent = "写";
+  setVoiceButtonState("manual");
   replyInput.focus();
-  setSpeechStatus(`${reason}，已切换文本输入，不影响提交点评`);
+  setSpeechStatus(`${reason}，可直接输入后提交点评`);
 }
 
 function ensureSpeechRecognition() {
@@ -729,7 +742,7 @@ function ensureSpeechRecognition() {
     isListening = true;
     replyForm.classList.add("is-recording", "is-listening");
     voiceCapture.classList.add("is-recording", "is-listening");
-    voiceCapture.textContent = "停";
+    setVoiceButtonState("listening");
     setSpeechStatus("正在录音并实时转写，请直接说出完整话术");
   };
   speechRecognition.onresult = (event) => {
@@ -745,7 +758,7 @@ function ensureSpeechRecognition() {
     });
     const transcript = `${browserCommittedTranscript}${finalTranscript}${interimTranscript}`.trim();
     replyInput.value = transcript;
-    setSpeechStatus(event.results[event.results.length - 1]?.isFinal ? "识别完成，可编辑后点击“发”发送" : "正在实时转写...");
+    setSpeechStatus(event.results[event.results.length - 1]?.isFinal ? "已转成文字，可修改后提交点评" : "正在实时转写...");
   };
   speechRecognition.onerror = (event) => {
     isListening = false;
@@ -774,18 +787,18 @@ function ensureSpeechRecognition() {
         try {
           speechRecognition.start();
         } catch {
-          setSpeechStatus("浏览器语音服务已暂停，可再点“说”重试或手动输入");
+          setSpeechStatus("浏览器语音服务已暂停，可重新录音或手动输入");
         }
       }, 180);
       return;
     }
     if (!replyForm.classList.contains("is-recording")) {
-      voiceCapture.textContent = "说";
+      setVoiceButtonState(replyInput.value.trim() ? "retry" : "idle");
     }
     if (replyInput.value.trim()) {
-      setSpeechStatus("录音已停止，转写内容可编辑，点击“发”发送");
+      setSpeechStatus("转写已停止，可修改文字后提交点评");
     } else if (replyForm.classList.contains("is-recording")) {
-      setSpeechStatus("没有识别到文字，可再点“说”重试或手动输入");
+      setSpeechStatus("没有识别到文字，可重新录音或手动输入");
     }
   };
   return speechRecognition;
@@ -849,7 +862,7 @@ function connectBackendAsr() {
         backendCommittedTranscript = backendTranscript;
         backendSessionTranscript = "";
       }
-      setSpeechStatus(payload.type === "final" ? "讯飞转写完成，可编辑后点击“发”发送" : "讯飞实时转写中...");
+      setSpeechStatus(payload.type === "final" ? "讯飞转写完成，可修改后提交点评" : "讯飞实时转写中...");
     }
     if (payload.type === "error") {
       switchToBrowserSpeechOrManual(payload.message || "讯飞语音识别暂不可用");
@@ -919,7 +932,7 @@ async function startVoiceRecording() {
   recordingTimer = window.setInterval(updateVoiceTimer, 500);
   replyForm.classList.add("is-recording");
   voiceCapture.classList.add("is-recording");
-  voiceCapture.textContent = "停";
+  setVoiceButtonState("listening");
   setSpeechStatus("正在请求麦克风权限...");
 
   if (!hasBackendApi()) {
@@ -1007,11 +1020,11 @@ function stopVoiceRecording({ keepText = true, silent = false } = {}) {
   isListening = false;
   replyForm.classList.remove("is-recording", "is-listening");
   voiceCapture.classList.remove("is-recording", "is-listening");
-  voiceCapture.textContent = "说";
+  setVoiceButtonState(replyInput.value.trim() ? "retry" : "idle");
   if (voiceLive) voiceLive.hidden = true;
   if (!keepText) replyInput.value = "";
   if (!silent) {
-    setSpeechStatus(replyInput.value.trim() ? "录音已停止，转写内容可编辑，点击“发”发送" : "录音已停止，未识别到文字，可重试或手动输入");
+    setSpeechStatus(replyInput.value.trim() ? "录音已停止，可修改文字后提交点评" : "录音已停止，未识别到文字，可重试或手动输入");
   }
   window.setTimeout(() => {
     stoppingVoiceRecording = false;

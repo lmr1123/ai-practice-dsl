@@ -6,11 +6,11 @@ const css = readFileSync(new URL("../mobile/styles.css", import.meta.url), "utf8
 
 const checks = [
   ["页面入口存在", html.includes('id="practiceView"') && html.includes('id="startPractice"')],
-  ["资源版本已更新", html.includes("app.js?v=20260506-asr") && html.includes("styles.css?v=20260506-asr")],
+  ["资源版本已更新", html.includes("app.js?v=20260506-composer") && html.includes("styles.css?v=20260506-composer")],
   ["微信式会话输入", html.includes('id="replyInput"') && html.includes('id="voiceCapture"') && html.includes('id="voiceLive"') && html.includes("提交点评")],
   ["点击录音闭环", app.includes("toggleVoiceRecording") && app.includes("startVoiceRecording") && app.includes("stopVoiceRecording")],
   ["语音实时转写", app.includes("SpeechRecognition") && app.includes("interimResults = true") && app.includes("正在录音并实时转写")],
-  ["语音失败不阻断", app.includes("switchToManualSpeech") && app.includes("不影响提交点评")],
+  ["语音失败不阻断", app.includes("switchToManualSpeech") && app.includes("可直接输入后提交点评")],
   ["真实员工话术评分", app.includes("replyInput.value.trim()") && app.includes("scoreReply(text)")],
   ["多轮顾客追问", app.includes("nextCustomerUtterance") && app.includes("turnIndex") && app.includes("maxTurns")],
   ["实时点评和润色", app.includes("showLiveReview(result)") && app.includes("polishReply(text, result)")],

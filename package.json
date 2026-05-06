@@ -1,0 +1,14 @@
+{
+  "name": "ai-practice-dsl",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "check": "node --check mobile/app.js && node --check server/index.js && node scripts/self_check_mobile.mjs && node scripts/self_check_server.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "ws": "^8.18.0"
+  }
+}

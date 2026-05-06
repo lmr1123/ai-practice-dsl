@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>大参林门店 AI 陪练微学习卡片</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="cover" aria-labelledby="page-title">
+        <div>
+          <span class="eyebrow">大参林门店 AI 陪练</span>
+          <h1 id="page-title">微学习卡片源文件</h1>
+          <p>
+            用于 AI 对练前的 3-5 分钟资料学习。文字由数据文件渲染，便于后续调整活动价格、会员权益、商品卖点和合规红线。
+          </p>
+        </div>
+        <aside class="meta-panel" aria-label="使用说明">
+          <strong>编辑入口</strong>
+          <span>改文案：cards-data.js</span>
+          <span>改版式：styles.css</span>
+          <span>打印导出：浏览器打印为 PDF</span>
+        </aside>
+      </section>
+
+      <nav class="toolbar" aria-label="卡片筛选">
+        <button class="filter-button" type="button" data-filter="全部" aria-pressed="true">全部</button>
+        <button class="filter-button" type="button" data-filter="办卡" aria-pressed="false">办卡</button>
+        <button class="filter-button" type="button" data-filter="新品" aria-pressed="false">新品</button>
+        <button class="print-button" type="button" data-print>打印 / 导出 PDF</button>
+      </nav>
+
+      <section class="cards-grid" id="cards" aria-label="微学习卡片"></section>
+    </main>
+
+    <script src="./cards-data.js"></script>
+    <script>
+      const cardsRoot = document.querySelector("#cards");
+      const buttons = document.querySelectorAll(".filter-button");
+      const printButton = document.querySelector("[data-print]");
+
+      function createList(items, className) {
+        const list = document.createElement("ul");
+        list.className = className;
+        items.forEach((item) => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          list.appendChild(li);
+        });
+        return list;
+      }
+
+      function renderCards(filter = "全部") {
+        cardsRoot.textContent = "";
+        window.trainingCards
+          .filter((card) => filter === "全部" || card.series === filter)
+          .forEach((card, index) => {
+            const article = document.createElement("article");
+            article.className = "training-card";
+            article.dataset.series = card.series;
+
+            const top = document.createElement("div");
+            top.className = "card-top";
+            top.innerHTML = `<span class="series">${card.series}</span><span class="tag">${card.tag}</span>`;
+
+            const title = document.createElement("h2");
+            title.textContent = card.title;
+
+            const subtitle = document.createElement("div");
+            subtitle.className = "subtitle";
+            subtitle.textContent = card.subtitle;
+
+            const intent = document.createElement("div");
+            intent.className = "intent";
+            intent.textContent = card.intent;
+
+            const lead = document.createElement("p");
+            lead.className = "lead";
+            lead.textContent = card.lead;
+
+            const pointBlock = document.createElement("section");
+            pointBlock.innerHTML = `<h3 class="section-title">必须掌握</h3>`;
+            pointBlock.appendChild(createList(card.points, "points"));
+
+            const avoidBlock = document.createElement("section");
+            avoidBlock.className = "avoid";
+            avoidBlock.innerHTML = `<h3 class="section-title">不要这样说</h3>`;
+            avoidBlock.appendChild(createList(card.avoid, "avoid-list"));
+
+            const number = document.createElement("span");
+            number.className = "card-number";
+            number.textContent = String(index + 1).padStart(2, "0");
+
+            article.append(top, title, subtitle, intent, lead, pointBlock, avoidBlock, number);
+            cardsRoot.appendChild(article);
+          });
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => {
+          buttons.forEach((item) => item.setAttribute("aria-pressed", "false"));
+          button.setAttribute("aria-pressed", "true");
+          renderCards(button.dataset.filter);
+        });
+      });
+
+      printButton.addEventListener("click", () => window.print());
+
+      renderCards();
+    </script>
+  </body>
+</html>

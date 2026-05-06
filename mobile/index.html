@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>大参林 AI 陪练</title>
+    <link rel="stylesheet" href="./styles.css?v=20260503-voice" />
+  </head>
+  <body>
+    <main class="phone-shell">
+      <section class="view is-active" id="homeView">
+        <header class="home-hero">
+          <div class="hero-copy">
+            <h1>AI 对练</h1>
+            <p>药店员工专属对练平台</p>
+          </div>
+          <button class="logo-dot" type="button" aria-label="小参助手">
+            <img src="./assets/mascot-home.png" alt="" />
+          </button>
+        </header>
+
+        <section class="welcome-card">
+          <div>
+            <strong>Hi，欢迎回来！</strong>
+            <p>今天也要加油哦~</p>
+          </div>
+          <img src="./assets/mascot-home.png" alt="小参陪练助手" />
+        </section>
+
+        <section class="goal-card">
+          <div class="goal-row">
+            <div>
+              <p class="section-label">今日对练目标</p>
+              <div class="goal-number"><strong>12</strong><span>/ 20 分钟</span></div>
+              <p class="muted">完成进度 60%</p>
+            </div>
+            <div class="ring" aria-label="完成进度 60%"><span>60%</span></div>
+          </div>
+          <button class="primary-cta" type="button" data-jump="practice">开始对练</button>
+          <div class="tool-grid">
+            <button type="button" data-jump="study"><img src="./assets/icon-medication.png" alt="" /><em>用药指导</em></button>
+            <button type="button" data-jump="drill"><img src="./assets/icon-script.png" alt="" /><em>销售话术</em></button>
+            <button type="button" data-jump="study"><img src="./assets/icon-policy.png" alt="" /><em>医保政策</em></button>
+            <button type="button" data-jump="drill"><img src="./assets/icon-prescription.png" alt="" /><em>处方咨询</em></button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>对练记录</h2>
+            <button type="button" data-jump="drill">查看全部 ›</button>
+          </div>
+          <div class="record-list" id="homeRecordList"></div>
+        </section>
+      </section>
+
+      <section class="view" id="drillView">
+        <header class="plain-head with-mascot">
+          <div>
+            <h1>对练</h1>
+            <p>多场景对练，提升专业能力</p>
+          </div>
+          <img src="./assets/mascot-practice.png" alt="" />
+        </header>
+        <div class="category-tabs" aria-label="场景分类">
+          <button class="is-active" type="button">全部</button>
+          <button type="button">用药指导</button>
+          <button type="button">销售话术</button>
+          <button type="button">医保政策</button>
+        </div>
+        <div class="drill-list" id="drillList"></div>
+      </section>
+
+      <section class="view" id="studyView">
+        <header class="plain-head with-mascot">
+          <div>
+            <h1>学习中心</h1>
+            <p>专业知识，随时充电</p>
+          </div>
+          <img src="./assets/mascot-study.png" alt="" />
+        </header>
+
+        <section class="daily-study">
+          <div>
+            <h2>每日一学</h2>
+            <p>维生素 C 不能和海鲜一起吃？真相是...</p>
+            <button class="small-cta" type="button" data-start-learn="member">去学习</button>
+          </div>
+          <div class="study-spot">
+            <span>✓</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>精选课程</h2>
+            <button type="button">更多 ›</button>
+          </div>
+          <div class="course-list" id="courseList"></div>
+        </section>
+      </section>
+
+      <section class="view" id="profileView">
+        <header class="profile-hero">
+          <img src="./assets/mascot-result.png" alt="小参" />
+          <div>
+            <h1>小参</h1>
+            <p>每天进步一点点<br />成为更专业的药店人~</p>
+          </div>
+        </header>
+        <section class="stats-card">
+          <div><strong>32</strong><span>对练次数</span></div>
+          <div><strong>89</strong><span>平均得分</span></div>
+          <div><strong>18.6h</strong><span>学习时长</span></div>
+        </section>
+        <section class="profile-menu">
+          <button type="button"><span>♡</span>我的收藏<i>›</i></button>
+          <button type="button"><span>□</span>错题本<i>›</i></button>
+          <button type="button"><span>✓</span>学习记录<i>›</i></button>
+          <button type="button"><span>⚙</span>设置<i>›</i></button>
+        </section>
+      </section>
+
+      <section class="view sub-view" id="learnView">
+        <div class="page-head">
+          <button class="back-button" type="button" data-action="study" aria-label="返回">‹</button>
+          <div>
+            <p class="section-label" id="learnScenario">资料学习</p>
+            <h2>先看卡片</h2>
+          </div>
+        </div>
+        <div class="stage-strip" id="cardProgress"></div>
+        <article class="learn-card" id="learnCard"></article>
+        <div class="sticky-actions">
+          <button class="ghost-button" type="button" id="prevCard">上一张</button>
+          <button class="solid-button" type="button" id="nextCard">下一张</button>
+        </div>
+      </section>
+
+      <section class="view sub-view" id="quizView">
+        <div class="page-head">
+          <button class="back-button" type="button" data-action="learn" aria-label="返回">‹</button>
+          <div>
+            <p class="section-label" id="quizScenario">训前小测</p>
+            <h2>答对 2 题进入对练</h2>
+          </div>
+        </div>
+        <article class="quiz-card" id="quizCard"></article>
+      </section>
+
+      <section class="view sub-view" id="prepView">
+        <div class="page-head prep-head">
+          <button class="back-button" type="button" data-action="drill" aria-label="返回">‹</button>
+          <div>
+            <p class="section-label">对练准备</p>
+            <h2 id="prepTitle">场景说明</h2>
+          </div>
+        </div>
+        <section class="prep-card" id="prepCard"></section>
+        <button class="primary-cta prep-start" type="button" id="startPractice">开始对练</button>
+      </section>
+
+      <section class="view sub-view" id="practiceView">
+        <div class="live-review-toast" id="liveReviewToast" hidden></div>
+        <section class="practice-stage" id="practiceRoleCard"></section>
+        <section class="chat-card" id="chatPanel"></section>
+        <section class="inspiration-card" id="inspirationCard"></section>
+        <form class="reply-box" id="replyForm">
+          <textarea class="manual-reply" id="replyInput" rows="2" placeholder="点击“说”开始录音转写，也可手动输入..."></textarea>
+          <div class="reply-actions">
+            <button class="voice-talk" id="voiceCapture" type="button" aria-label="点击说话">点击说话</button>
+            <button class="submit-reply" type="submit">提交点评</button>
+          </div>
+          <div class="voice-live" id="voiceLive" hidden>
+            <span class="voice-wave" aria-hidden="true"><i></i><i></i><i></i></span>
+            <strong id="voiceTimer">00:00</strong>
+            <em>正在录音并实时转写</em>
+          </div>
+          <p id="speechStatus">请使用真实话术完成本轮对练</p>
+        </form>
+        <section class="feedback-card" id="feedbackPanel" hidden></section>
+      </section>
+
+      <section class="view sub-view" id="resultView">
+        <div class="chat-head">
+          <button class="back-button" type="button" data-action="drill" aria-label="返回">‹</button>
+          <h2>对练报告</h2>
+          <button class="end-link" type="button" data-action="drill">完成</button>
+        </div>
+        <section class="practice-report" id="practiceReport"></section>
+      </section>
+    </main>
+
+    <nav class="app-tabbar" aria-label="主导航">
+      <button type="button" data-nav="homeView" aria-current="page"><span>⌂</span>首页</button>
+      <button type="button" data-nav="drillView"><span>✓</span>对练</button>
+      <button type="button" data-nav="studyView"><span>▰</span>学习</button>
+      <button type="button" data-nav="profileView"><span>♙</span>我的</button>
+    </nav>
+
+    <script src="./app.js?v=20260503-voice"></script>
+  </body>
+</html>

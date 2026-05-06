@@ -1,0 +1,299 @@
+:root {
+  --paper: #fbf7ef;
+  --ink: #2b211b;
+  --muted: #6c5b51;
+  --line: #d8cab7;
+  --red: #b6202a;
+  --red-deep: #7d1119;
+  --green: #1f6b50;
+  --gold: #b9842c;
+  --blue: #215f87;
+  --shadow: 0 18px 45px rgba(65, 43, 28, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(90deg, rgba(182, 32, 42, 0.06) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(182, 32, 42, 0.04) 1px, transparent 1px),
+    var(--paper);
+  background-size: 36px 36px;
+  color: var(--ink);
+  font-family: "Noto Serif SC", "Songti SC", "STSong", serif;
+}
+
+.page-shell {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 36px 0 56px;
+}
+
+.cover {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: 28px;
+  align-items: end;
+  border-bottom: 3px solid var(--red);
+  padding-bottom: 24px;
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  color: var(--red-deep);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0;
+  border: 1px solid var(--red);
+  padding: 5px 9px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+h1 {
+  margin: 14px 0 8px;
+  font-size: clamp(30px, 4vw, 54px);
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.cover p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.meta-panel {
+  border: 2px solid var(--ink);
+  background: rgba(255, 255, 255, 0.62);
+  padding: 18px;
+}
+
+.meta-panel strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.meta-panel span {
+  display: block;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 20px 0 28px;
+}
+
+.filter-button,
+.print-button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  padding: 8px 12px;
+  font: 700 14px/1 "Noto Serif SC", "Songti SC", serif;
+  cursor: pointer;
+}
+
+.filter-button[aria-pressed="true"] {
+  color: #fff9ef;
+  border-color: var(--red-deep);
+  background: var(--red);
+}
+
+.print-button {
+  margin-left: auto;
+  border-color: var(--ink);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 22px;
+}
+
+.training-card {
+  position: relative;
+  min-height: 520px;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  gap: 16px;
+  border: 2px solid var(--ink);
+  background: #fffaf1;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  overflow: hidden;
+  page-break-inside: avoid;
+}
+
+.training-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 10px;
+  background: var(--red);
+}
+
+.training-card[data-series="新品"]::before {
+  background: var(--green);
+}
+
+.card-top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-left: 4px;
+}
+
+.series {
+  color: var(--red-deep);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.training-card[data-series="新品"] .series {
+  color: var(--green);
+}
+
+.tag {
+  min-width: 54px;
+  text-align: center;
+  border: 1px solid currentColor;
+  color: var(--gold);
+  padding: 5px 8px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.training-card h2 {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.18;
+  letter-spacing: 0;
+}
+
+.subtitle {
+  margin-top: -10px;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.intent {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.lead {
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.7;
+  font-weight: 800;
+}
+
+.section-title {
+  margin: 0 0 8px;
+  color: var(--red-deep);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.training-card[data-series="新品"] .section-title {
+  color: var(--green);
+}
+
+.points,
+.avoid-list {
+  margin: 0;
+  padding-left: 1.1em;
+}
+
+.points li,
+.avoid-list li {
+  margin: 7px 0;
+  line-height: 1.55;
+  font-size: 15px;
+}
+
+.avoid {
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--red) 45%, var(--line));
+  padding: 12px 14px;
+}
+
+.avoid .section-title {
+  color: var(--red-deep);
+}
+
+.card-number {
+  position: absolute;
+  right: 18px;
+  bottom: 12px;
+  color: rgba(43, 33, 27, 0.2);
+  font-size: 42px;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .page-shell {
+    width: min(100% - 24px, 1180px);
+    padding-top: 22px;
+  }
+
+  .cover {
+    grid-template-columns: 1fr;
+  }
+
+  .print-button {
+    margin-left: 0;
+  }
+
+  .training-card {
+    min-height: auto;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .page-shell {
+    width: auto;
+    padding: 0;
+  }
+
+  .cover,
+  .toolbar {
+    display: none;
+  }
+
+  .cards-grid {
+    display: block;
+  }
+
+  .training-card {
+    width: 180mm;
+    min-height: 250mm;
+    margin: 0 auto;
+    box-shadow: none;
+    break-after: page;
+  }
+}

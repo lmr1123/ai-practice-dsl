@@ -77,13 +77,14 @@ export async function recordPracticeReport(report) {
   }
 
   const markdown = reportToMarkdown(report);
+  const identity = process.env.FEISHU_RECORD_AS || "bot";
   try {
     if (process.env.FEISHU_DOC_TOKEN) {
       const output = await runLarkCli([
         "docs",
         "+update",
         "--as",
-        "bot",
+        identity,
         "--doc",
         process.env.FEISHU_DOC_TOKEN,
         "--mode",
@@ -98,7 +99,7 @@ export async function recordPracticeReport(report) {
       "docs",
       "+create",
       "--as",
-      "bot",
+      identity,
       "--title",
       `AI陪练记录-${report.scenarioName}-${formatTime(report.finishedAt)}`,
       "--markdown",

@@ -553,80 +553,37 @@ function buildRealtimeRolePrompt() {
   ].filter(Boolean).join("\n");
 }
 
-function renderRealtimeVoice(status = null) {
+function renderRealtimeVoice() {
   const scenario = currentScenario();
   const role = currentCustomerRole();
-  const prompt = buildRealtimeRolePrompt();
   if (realtimeTitle) realtimeTitle.textContent = scenario.name;
   realtimePanel.innerHTML = `
-    <section class="realtime-hero">
-      <img src="${scenario.prep.image}" alt="${scenario.name}虚拟顾客" />
-      <div>
-        <span>新入口体验</span>
-        <h3>端到端实时语音</h3>
-        <p>保留原有 ASR + GLM 评分链路，这里用于验证豆包实时语音模型的角色扮演能力。</p>
+    <section class="voice-agent-stage" id="voiceAgentStage">
+      <div class="voice-orbit" aria-hidden="true">
+        ${Array.from({ length: 56 }, (_, index) => `<i style="--i:${index}"></i>`).join("")}
+      </div>
+      <img class="voice-agent-avatar" src="${scenario.prep.image}" alt="${role.name}虚拟顾客" />
+      <div class="voice-agent-copy">
+        <span>AI 顾客 · ${role.name}</span>
+        <h3>${scenario.name}</h3>
+        <p>${role.profile}</p>
       </div>
     </section>
-    <section class="realtime-card">
-      <div class="realtime-card-head">
-        <span>顾客角色</span>
-        <strong>${role.name}，${role.age} 岁</strong>
-      </div>
-      <p>${role.profile}</p>
-      <em>${role.initialUtterance}</em>
-    </section>
-    <section class="realtime-card">
-      <div class="realtime-card-head">
-        <span>模型预设</span>
-        <strong>将注入到豆包实时语音会话</strong>
-      </div>
-      <pre>${escapeHtml(prompt)}</pre>
-    </section>
-    <section class="realtime-status ${status?.ok ? "is-ok" : status ? "is-warn" : ""}">
-      <strong>${status ? (status.ok ? "连接检查通过" : "连接检查未通过") : "接入状态"}</strong>
-      <p>${status ? escapeHtml(status.message || "已返回检查结果") : "点击下方按钮检查服务端是否已能连接豆包实时语音。密钥只保存在服务端，不会下发到浏览器。"}</p>
-      ${status?.latencyMs ? `<em>连接耗时 ${status.latencyMs}ms</em>` : ""}
-    </section>
-    <section class="realtime-live">
-      <div class="realtime-live-head">
-        <span>实时会话</span>
-        <strong id="realtimeConnState">未连接</strong>
-      </div>
+    <section class="voice-agent-dialog">
+      <strong id="realtimeConnState">准备开始</strong>
+      <p id="realtimeCoachHint">点击开始后，直接用门店话术和顾客对话。系统会自动连接实时语音模型。</p>
       <div class="realtime-log" id="realtimeLog">
-        <p>点击“连接豆包”后，将用当前角色预设启动实时语音会话。先支持文字触发和模型语音返回，麦克风实时流下一步接入。</p>
+        <p>${role.initialUtterance}</p>
       </div>
-      <textarea id="realtimeTestInput" rows="2" placeholder="输入一句员工话术，测试豆包顾客如何回应...">你好，现在办会员是免费的，权益按门店活动可能有会员价、优惠券或积分，手机号主要用于账户和券到账。</textarea>
     </section>
     <div class="realtime-actions">
-      <button class="ghost-button" type="button" id="checkRealtimeVoice">检查连接</button>
-      <button class="solid-button" type="button" id="connectRealtimeVoice">连接豆包</button>
-      <button class="solid-button realtime-mic-button" type="button" id="toggleRealtimeMic">开始实时说话</button>
-      <button class="ghost-button" type="button" id="sendRealtimeText">发送话术</button>
-      <button class="ghost-button" type="button" id="closeRealtimeVoice">断开</button>
+      <button class="solid-button realtime-main-button" type="button" id="toggleRealtimeConversation">
+        <span>开始语音对话</span>
+        <em>点击后直接说话</em>
+      </button>
     </div>
   `;
-  realtimePanel.querySelector("#checkRealtimeVoice").addEventListener("click", checkRealtimeVoice);
-  realtimePanel.querySelector("#connectRealtimeVoice").addEventListener("click", connectRealtimeVoice);
-  realtimePanel.querySelector("#toggleRealtimeMic").addEventListener("click", toggleRealtimeMic);
-  realtimePanel.querySelector("#sendRealtimeText").addEventListener("click", sendRealtimeText);
-  realtimePanel.querySelector("#closeRealtimeVoice").addEventListener("click", closeRealtimeVoice);
-}
-
-async function checkRealtimeVoice() {
-  const button = realtimePanel.querySelector("#checkRealtimeVoice");
-  if (button) {
-    button.disabled = true;
-    button.textContent = "检查中...";
-  }
-  try {
-    const result = await postJson("/api/doubao/realtime/check", { scenarioId: state.scenarioId });
-    renderRealtimeVoice(result);
-  } catch (error) {
-    renderRealtimeVoice({
-      ok: false,
-      message: "暂未连通豆包实时语音。请确认服务端环境变量、实时语音权限和资源 ID。"
-    });
-  }
+  realtimePanel.querySelector("#toggleRealtimeConversation").addEventListener("click", toggleRealtimeConversation);
 }
 
 function appendRealtimeLog(text, tone = "") {
@@ -644,20 +601,36 @@ function setRealtimeState(text) {
   if (stateLabel) stateLabel.textContent = text;
 }
 
-function setRealtimeMicButton(recording) {
-  const button = realtimePanel?.querySelector("#toggleRealtimeMic");
-  if (!button) return;
-  button.classList.toggle("is-recording", recording);
-  button.textContent = recording ? "停止说话" : "开始实时说话";
+function setRealtimeHint(text) {
+  const hint = realtimePanel?.querySelector("#realtimeCoachHint");
+  if (hint) hint.textContent = text;
 }
 
-function connectRealtimeVoice() {
+function setRealtimeMicButton(recording) {
+  const button = realtimePanel?.querySelector("#toggleRealtimeConversation");
+  if (!button) return;
+  button.classList.toggle("is-recording", recording);
+  button.innerHTML = recording
+    ? "<span>结束语音对话</span><em>本轮说完后点击</em>"
+    : "<span>开始语音对话</span><em>点击后直接说话</em>";
+}
+
+async function toggleRealtimeConversation() {
+  if (realtimeMicRecording || realtimeSocket) {
+    appendRealtimeLog("本轮语音对话已结束", "ok");
+    closeRealtimeVoice();
+    return;
+  }
+  connectRealtimeVoice({ autoMic: true });
+}
+
+function connectRealtimeVoice({ autoMic = false } = {}) {
   closeRealtimeVoice();
   realtimeAudioChunks = [];
   realtimeSocket = new WebSocket(`${wsBaseUrl()}/api/doubao/realtime/stream`);
   realtimeSocket.addEventListener("open", () => {
     setRealtimeState("连接中");
-    appendRealtimeLog("正在启动豆包实时语音会话...");
+    setRealtimeHint("正在连接实时语音模型...");
     realtimeSocket.send(JSON.stringify({
       type: "start",
       prompt: buildRealtimeRolePrompt()
@@ -671,14 +644,18 @@ function connectRealtimeVoice() {
       return;
     }
     if (payload.type === "ready") {
-      setRealtimeState("已连接");
-      appendRealtimeLog("豆包实时语音会话已启动，可以发送话术测试。", "ok");
+      setRealtimeState("正在对话");
+      setRealtimeHint("请直接说门店话术，顾客会用语音回应。");
+      realtimePanel?.querySelector("#voiceAgentStage")?.classList.add("is-listening");
+      appendRealtimeLog("已进入实时语音，请开始说话。", "ok");
       realtimeSocket.send(JSON.stringify({ type: "say", content: currentCustomerRole().initialUtterance }));
+      if (autoMic) startRealtimeMic();
       return;
     }
     if (payload.type === "event") {
       const text = payload.text || payload.payload?.content || payload.name;
-      appendRealtimeLog(`${payload.name || "事件"}：${text}`);
+      if (payload.event === 451 && text) appendRealtimeLog(`你：${text}`);
+      if (payload.event === 550 && text) appendRealtimeLog(`顾客：${text}`);
       return;
     }
     if (payload.type === "audio") {
@@ -691,27 +668,20 @@ function connectRealtimeVoice() {
       return;
     }
     if (payload.type === "error") {
+      setRealtimeState("连接失败");
+      setRealtimeHint("实时语音暂时不可用，请稍后重试或使用原对练。");
       appendRealtimeLog(payload.message || "豆包实时语音异常", "warn");
     }
   });
   realtimeSocket.addEventListener("close", () => {
-    setRealtimeState("已断开");
+    setRealtimeState("准备开始");
+    setRealtimeHint("点击开始后，直接用门店话术和顾客对话。");
+    realtimePanel?.querySelector("#voiceAgentStage")?.classList.remove("is-listening", "is-speaking");
   });
   realtimeSocket.addEventListener("error", () => {
-    appendRealtimeLog("实时语音 WebSocket 连接失败", "warn");
+    setRealtimeState("连接失败");
+    setRealtimeHint("实时语音连接失败，请检查网络后重试。");
   });
-}
-
-function sendRealtimeText() {
-  const input = realtimePanel?.querySelector("#realtimeTestInput");
-  const content = input?.value.trim();
-  if (!content) return;
-  if (!realtimeSocket || realtimeSocket.readyState !== WebSocket.OPEN) {
-    appendRealtimeLog("请先连接豆包实时语音。", "warn");
-    return;
-  }
-  appendRealtimeLog(`员工：${content}`);
-  realtimeSocket.send(JSON.stringify({ type: "say", content }));
 }
 
 function closeRealtimeVoice() {
@@ -722,15 +692,9 @@ function closeRealtimeVoice() {
   }
   realtimeSocket = null;
   realtimeAudioChunks = [];
-  setRealtimeState("已断开");
-}
-
-async function toggleRealtimeMic() {
-  if (realtimeMicRecording) {
-    stopRealtimeMic();
-    return;
-  }
-  await startRealtimeMic();
+  setRealtimeState("准备开始");
+  setRealtimeHint("点击开始后，直接用门店话术和顾客对话。");
+  realtimePanel?.querySelector("#voiceAgentStage")?.classList.remove("is-listening", "is-speaking");
 }
 
 async function startRealtimeMic() {
@@ -756,6 +720,9 @@ async function startRealtimeMic() {
     realtimeMicMute.connect(realtimeAudioContext.destination);
     realtimeMicRecording = true;
     setRealtimeMicButton(true);
+    realtimePanel?.querySelector("#voiceAgentStage")?.classList.add("is-speaking");
+    setRealtimeState("正在聆听");
+    setRealtimeHint("保持正常语速说完整话术，说完点击结束。");
     appendRealtimeLog("麦克风已接入豆包实时语音，请直接说员工话术。", "ok");
   } catch {
     appendRealtimeLog("麦克风权限未开启，无法进入实时语音。", "warn");
@@ -784,6 +751,11 @@ function stopRealtimeMic() {
   realtimeAudioContext = null;
   realtimeMicStream = null;
   setRealtimeMicButton(false);
+  realtimePanel?.querySelector("#voiceAgentStage")?.classList.remove("is-speaking");
+  if (realtimeSocket) {
+    setRealtimeState("正在对话");
+    setRealtimeHint("已停止收音，可等待顾客回应或结束本轮。");
+  }
 }
 
 function playRealtimeAudio(chunks, mime) {

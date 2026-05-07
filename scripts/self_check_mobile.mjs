@@ -11,7 +11,7 @@ const checks = [
   ["点击录音闭环", app.includes("toggleVoiceRecording") && app.includes("startVoiceRecording") && app.includes("stopVoiceRecording")],
   ["语音实时转写", app.includes("SpeechRecognition") && app.includes("interimResults = true") && app.includes("正在录音并实时转写")],
   ["前端VAD端点提示", app.includes("updateVad(samples)") && app.includes("检测到停顿，不会自动结束") && css.includes(".voice-live.is-speaking")],
-  ["豆包实时语音入口", html.includes('id="startRealtimeVoice"') && app.includes("renderRealtimeVoice") && css.includes(".realtime-panel")],
+  ["豆包实时语音入口", html.includes('id="startRealtimeVoice"') && app.includes("renderRealtimeVoice") && app.includes("connectRealtimeVoice") && app.includes("startRealtimeMic") && css.includes(".realtime-panel")],
   ["语音失败不阻断", app.includes("switchToManualSpeech") && app.includes("可直接输入后提交点评")],
   ["真实员工话术评分", app.includes("replyInput.value.trim()") && app.includes("scoreReply(text)")],
   ["多轮顾客追问", app.includes("nextCustomerUtterance") && app.includes("turnIndex") && app.includes("maxTurns")],

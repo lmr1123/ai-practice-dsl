@@ -268,6 +268,14 @@ let vadSilenceStartedAt = 0;
 let vadLastStatusAt = 0;
 let vadLastLongSilenceAt = 0;
 let audioOutputMute = null;
+let realtimeSocket = null;
+let realtimeAudioChunks = [];
+let realtimeAudioContext = null;
+let realtimeMicStream = null;
+let realtimeMicSource = null;
+let realtimeMicProcessor = null;
+let realtimeMicMute = null;
+let realtimeMicRecording = false;
 
 function apiBaseUrl() {
   if (window.AI_PRACTICE_API_BASE_URL) return window.AI_PRACTICE_API_BASE_URL.replace(/\/$/, "");
@@ -579,12 +587,29 @@ function renderRealtimeVoice(status = null) {
       <p>${status ? escapeHtml(status.message || "已返回检查结果") : "点击下方按钮检查服务端是否已能连接豆包实时语音。密钥只保存在服务端，不会下发到浏览器。"}</p>
       ${status?.latencyMs ? `<em>连接耗时 ${status.latencyMs}ms</em>` : ""}
     </section>
+    <section class="realtime-live">
+      <div class="realtime-live-head">
+        <span>实时会话</span>
+        <strong id="realtimeConnState">未连接</strong>
+      </div>
+      <div class="realtime-log" id="realtimeLog">
+        <p>点击“连接豆包”后，将用当前角色预设启动实时语音会话。先支持文字触发和模型语音返回，麦克风实时流下一步接入。</p>
+      </div>
+      <textarea id="realtimeTestInput" rows="2" placeholder="输入一句员工话术，测试豆包顾客如何回应...">你好，现在办会员是免费的，权益按门店活动可能有会员价、优惠券或积分，手机号主要用于账户和券到账。</textarea>
+    </section>
     <div class="realtime-actions">
       <button class="ghost-button" type="button" id="checkRealtimeVoice">检查连接</button>
-      <button class="solid-button" type="button" disabled>语音通话开发中</button>
+      <button class="solid-button" type="button" id="connectRealtimeVoice">连接豆包</button>
+      <button class="solid-button realtime-mic-button" type="button" id="toggleRealtimeMic">开始实时说话</button>
+      <button class="ghost-button" type="button" id="sendRealtimeText">发送话术</button>
+      <button class="ghost-button" type="button" id="closeRealtimeVoice">断开</button>
     </div>
   `;
   realtimePanel.querySelector("#checkRealtimeVoice").addEventListener("click", checkRealtimeVoice);
+  realtimePanel.querySelector("#connectRealtimeVoice").addEventListener("click", connectRealtimeVoice);
+  realtimePanel.querySelector("#toggleRealtimeMic").addEventListener("click", toggleRealtimeMic);
+  realtimePanel.querySelector("#sendRealtimeText").addEventListener("click", sendRealtimeText);
+  realtimePanel.querySelector("#closeRealtimeVoice").addEventListener("click", closeRealtimeVoice);
 }
 
 async function checkRealtimeVoice() {
@@ -602,6 +627,173 @@ async function checkRealtimeVoice() {
       message: "暂未连通豆包实时语音。请确认服务端环境变量、实时语音权限和资源 ID。"
     });
   }
+}
+
+function appendRealtimeLog(text, tone = "") {
+  const log = realtimePanel?.querySelector("#realtimeLog");
+  if (!log) return;
+  const row = document.createElement("p");
+  row.className = tone ? `is-${tone}` : "";
+  row.textContent = text;
+  log.appendChild(row);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setRealtimeState(text) {
+  const stateLabel = realtimePanel?.querySelector("#realtimeConnState");
+  if (stateLabel) stateLabel.textContent = text;
+}
+
+function setRealtimeMicButton(recording) {
+  const button = realtimePanel?.querySelector("#toggleRealtimeMic");
+  if (!button) return;
+  button.classList.toggle("is-recording", recording);
+  button.textContent = recording ? "停止说话" : "开始实时说话";
+}
+
+function connectRealtimeVoice() {
+  closeRealtimeVoice();
+  realtimeAudioChunks = [];
+  realtimeSocket = new WebSocket(`${wsBaseUrl()}/api/doubao/realtime/stream`);
+  realtimeSocket.addEventListener("open", () => {
+    setRealtimeState("连接中");
+    appendRealtimeLog("正在启动豆包实时语音会话...");
+    realtimeSocket.send(JSON.stringify({
+      type: "start",
+      prompt: buildRealtimeRolePrompt()
+    }));
+  });
+  realtimeSocket.addEventListener("message", (event) => {
+    let payload;
+    try {
+      payload = JSON.parse(event.data);
+    } catch {
+      return;
+    }
+    if (payload.type === "ready") {
+      setRealtimeState("已连接");
+      appendRealtimeLog("豆包实时语音会话已启动，可以发送话术测试。", "ok");
+      realtimeSocket.send(JSON.stringify({ type: "say", content: currentCustomerRole().initialUtterance }));
+      return;
+    }
+    if (payload.type === "event") {
+      const text = payload.text || payload.payload?.content || payload.name;
+      appendRealtimeLog(`${payload.name || "事件"}：${text}`);
+      return;
+    }
+    if (payload.type === "audio") {
+      realtimeAudioChunks.push(payload.audio);
+      return;
+    }
+    if (payload.type === "audio_end") {
+      playRealtimeAudio(payload.chunks || realtimeAudioChunks, payload.mime || "audio/ogg");
+      realtimeAudioChunks = [];
+      return;
+    }
+    if (payload.type === "error") {
+      appendRealtimeLog(payload.message || "豆包实时语音异常", "warn");
+    }
+  });
+  realtimeSocket.addEventListener("close", () => {
+    setRealtimeState("已断开");
+  });
+  realtimeSocket.addEventListener("error", () => {
+    appendRealtimeLog("实时语音 WebSocket 连接失败", "warn");
+  });
+}
+
+function sendRealtimeText() {
+  const input = realtimePanel?.querySelector("#realtimeTestInput");
+  const content = input?.value.trim();
+  if (!content) return;
+  if (!realtimeSocket || realtimeSocket.readyState !== WebSocket.OPEN) {
+    appendRealtimeLog("请先连接豆包实时语音。", "warn");
+    return;
+  }
+  appendRealtimeLog(`员工：${content}`);
+  realtimeSocket.send(JSON.stringify({ type: "say", content }));
+}
+
+function closeRealtimeVoice() {
+  stopRealtimeMic();
+  if (realtimeSocket && realtimeSocket.readyState === WebSocket.OPEN) {
+    realtimeSocket.send(JSON.stringify({ type: "end" }));
+    realtimeSocket.close();
+  }
+  realtimeSocket = null;
+  realtimeAudioChunks = [];
+  setRealtimeState("已断开");
+}
+
+async function toggleRealtimeMic() {
+  if (realtimeMicRecording) {
+    stopRealtimeMic();
+    return;
+  }
+  await startRealtimeMic();
+}
+
+async function startRealtimeMic() {
+  if (!realtimeSocket || realtimeSocket.readyState !== WebSocket.OPEN) {
+    appendRealtimeLog("请先连接豆包实时语音。", "warn");
+    return;
+  }
+  try {
+    realtimeMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    realtimeAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    realtimeMicSource = realtimeAudioContext.createMediaStreamSource(realtimeMicStream);
+    realtimeMicProcessor = realtimeAudioContext.createScriptProcessor(4096, 1, 1);
+    realtimeMicProcessor.onaudioprocess = (event) => {
+      if (!realtimeMicRecording || !realtimeSocket || realtimeSocket.readyState !== WebSocket.OPEN) return;
+      const samples = event.inputBuffer.getChannelData(0);
+      const pcm = downsampleTo16k(samples, realtimeAudioContext.sampleRate);
+      realtimeSocket.send(pcm);
+    };
+    realtimeMicMute = realtimeAudioContext.createGain();
+    realtimeMicMute.gain.value = 0;
+    realtimeMicSource.connect(realtimeMicProcessor);
+    realtimeMicProcessor.connect(realtimeMicMute);
+    realtimeMicMute.connect(realtimeAudioContext.destination);
+    realtimeMicRecording = true;
+    setRealtimeMicButton(true);
+    appendRealtimeLog("麦克风已接入豆包实时语音，请直接说员工话术。", "ok");
+  } catch {
+    appendRealtimeLog("麦克风权限未开启，无法进入实时语音。", "warn");
+    stopRealtimeMic();
+  }
+}
+
+function stopRealtimeMic() {
+  realtimeMicRecording = false;
+  if (realtimeMicProcessor) {
+    try { realtimeMicProcessor.disconnect(); } catch {}
+  }
+  if (realtimeMicSource) {
+    try { realtimeMicSource.disconnect(); } catch {}
+  }
+  if (realtimeMicMute) {
+    try { realtimeMicMute.disconnect(); } catch {}
+  }
+  if (realtimeAudioContext) {
+    try { realtimeAudioContext.close(); } catch {}
+  }
+  if (realtimeMicStream) realtimeMicStream.getTracks().forEach((track) => track.stop());
+  realtimeMicProcessor = null;
+  realtimeMicSource = null;
+  realtimeMicMute = null;
+  realtimeAudioContext = null;
+  realtimeMicStream = null;
+  setRealtimeMicButton(false);
+}
+
+function playRealtimeAudio(chunks, mime) {
+  if (!chunks?.length) return;
+  const bytes = chunks.flatMap((chunk) => Array.from(Uint8Array.from(atob(chunk), (char) => char.charCodeAt(0))));
+  const blob = new Blob([new Uint8Array(bytes)], { type: mime || "audio/ogg" });
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  audio.play().catch(() => appendRealtimeLog("浏览器拦截了自动播放，可再次点击发送话术后播放。", "warn"));
+  audio.addEventListener("ended", () => URL.revokeObjectURL(url), { once: true });
 }
 
 function renderLearn() {

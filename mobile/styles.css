@@ -1200,10 +1200,85 @@ li {
   font-weight: 850;
 }
 
+.realtime-live {
+  display: grid;
+  gap: 10px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 14px;
+  box-shadow:
+    0 12px 26px rgba(24, 91, 63, 0.08),
+    inset 0 0 0 1px rgba(222, 235, 228, 0.86);
+}
+
+.realtime-live-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.realtime-live-head span {
+  color: var(--green-deep);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.realtime-live-head strong {
+  border-radius: 999px;
+  background: #eef8f3;
+  color: var(--green-deep);
+  padding: 4px 9px;
+  font-size: 11px;
+}
+
+.realtime-log {
+  display: grid;
+  max-height: 178px;
+  overflow: auto;
+  gap: 7px;
+  border-radius: 14px;
+  background: #f6faf8;
+  padding: 10px;
+}
+
+.realtime-log p {
+  margin: 0;
+  color: #42594e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.realtime-log p.is-ok {
+  color: var(--green-deep);
+  font-weight: 850;
+}
+
+.realtime-log p.is-warn {
+  color: #b85d24;
+  font-weight: 850;
+}
+
+.realtime-live textarea {
+  min-height: 58px;
+  border-radius: 14px;
+  background: #fbfdfc;
+}
+
 .realtime-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.realtime-actions .realtime-mic-button {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #159c6a, #087d50);
+}
+
+.realtime-actions .realtime-mic-button.is-recording {
+  background: linear-gradient(135deg, #ff9e3d, #e46b34);
+  animation: voicePulse 1.2s ease-in-out infinite;
 }
 
 #practiceView {

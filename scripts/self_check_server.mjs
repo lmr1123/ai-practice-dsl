@@ -18,7 +18,7 @@ const checks = [
   ["前端连接后端 ASR", files.client.includes("connectBackendAsr") && files.client.includes("downsampleTo16k")],
   ["前端调用 GLM 会话", files.client.includes("sendPracticeMessageToServer")],
   ["前端提交报告", files.client.includes("finishPracticeOnServer")],
-  ["豆包实时语音后端", files.index.includes("/api/doubao/realtime/check") && files.doubao.includes("X-Api-App-ID") && files.doubao.includes("volc.speech.dialog")]
+  ["豆包实时语音后端", files.index.includes("/api/doubao/realtime/check") && files.index.includes("/api/doubao/realtime/stream") && files.doubao.includes("X-Api-App-ID") && files.doubao.includes("volc.speech.dialog")]
 ];
 
 for (const [name, pass] of checks) {

@@ -8,7 +8,7 @@ import { WebSocketServer } from "ws";
 import { createXunfeiAsrBridge } from "./services/xunfeiAsr.js";
 import { createPracticeSession, handlePracticeMessage, finishPracticeSession } from "./services/glmCoach.js";
 import { recordPracticeReport } from "./services/feishuRecorder.js";
-import { doubaoRealtimeStatus, checkDoubaoRealtimeConnection } from "./services/doubaoRealtime.js";
+import { doubaoRealtimeStatus, checkDoubaoRealtimeConnection, createDoubaoRealtimeBridge } from "./services/doubaoRealtime.js";
 
 const rootDir = fileURLToPath(new URL("../", import.meta.url));
 loadEnv({ path: join(rootDir, ".env.local") });
@@ -130,6 +130,12 @@ const wss = new WebSocketServer({ noServer: true });
 
 server.on("upgrade", (req, socket, head) => {
   const url = new URL(req.url || "", `http://${req.headers.host || "localhost"}`);
+  if (url.pathname === "/api/doubao/realtime/stream") {
+    wss.handleUpgrade(req, socket, head, (client) => {
+      createDoubaoRealtimeBridge(client);
+    });
+    return;
+  }
   if (url.pathname !== "/api/asr/stream") {
     socket.destroy();
     return;
